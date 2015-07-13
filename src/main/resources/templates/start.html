@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head> 
+    <title>cf-service-tester</title> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <div> 
+    	<div><img src="redis.png" /></div><div><p th:text="${statusRedis ? 'UP' : 'DOWN'}" /></div>
+    </div>
+    <div> 
+    	<div><img src="rabbitmq.ico" /></div><div><p th:text="${statusRabbit ? 'UP' : 'DOWN'}" /></div>
+    </div>
+</body>
+</html>
