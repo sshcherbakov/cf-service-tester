@@ -3,13 +3,24 @@
 <head> 
     <title>cf-service-tester</title> 
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="start-style.css" />
 </head>
 <body>
-    <div> 
-    	<div><img src="redis.png" /></div><div><p th:text="${statusRedis ? 'UP' : 'DOWN'}" /></div>
-    </div>
-    <div> 
-    	<div><img src="rabbitmq.ico" /></div><div><p th:text="${statusRabbit ? 'UP' : 'DOWN'}" /></div>
-    </div>
+	<div class="container">
+
+		<div class="starter-template">
+			<h1>Services</h1>
+			<p class="lead">
+				<img src="redis.png" /> 
+				<span th:text="${statusRedis ? 'UP' : 'DOWN'}" ></span>
+			</p>
+			<p class="lead">
+				<img src="rabbitmq.ico" />
+				<span th:text="${statusRabbit ? 'UP' : 'DOWN'}" ></span>
+			</p>
+		</div>
+
+	</div>
 </body>
 </html>

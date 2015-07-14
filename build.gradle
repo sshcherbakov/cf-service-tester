@@ -41,6 +41,8 @@ dependencies {
 	compile("org.springframework.boot:spring-boot-starter-thymeleaf")
 	
 	compile("joda-time:joda-time:2.8.1")
+	compile("io.dropwizard.metrics:metrics-core:3.1.2")
+	compile("com.ryantenney.metrics:metrics-spring:3.1.0")
 	
     testCompile("org.springframework.boot:spring-boot-starter-test") 
 }

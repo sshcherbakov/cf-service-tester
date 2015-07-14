@@ -1,7 +1,6 @@
 package io.pivotal.cf.tester.config;
 
-import io.pivotal.cf.tester.service.TestMessageHandler;
-
+import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -20,7 +19,7 @@ public class RabbitConfig {
 	private String rabbitQueueName;
 
 	@Autowired
-	public TestMessageHandler testMessageHandler;
+	public MessageListener testMessageHandler;
 
 	@Bean
 	public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
