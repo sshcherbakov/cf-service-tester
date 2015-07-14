@@ -6,8 +6,10 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.beans.factory.annotation.Value;
 
-public class TestMessageHandler implements MessageListener {
-	private static Logger log = LoggerFactory.getLogger(TestMessageHandler.class);
+import com.codahale.metrics.annotation.Timed;
+
+public class TestMessageConsumer implements MessageListener {
+	private static Logger log = LoggerFactory.getLogger(TestMessageConsumer.class);
 
 	@Value("${vcap.application.name:cf-tester}")
 	private String applicationName;
@@ -18,9 +20,10 @@ public class TestMessageHandler implements MessageListener {
 	@Value("${vcap.application.instance_index:0}")
 	private int instanceIndex;
 
+	@Timed
 	@Override
 	public void onMessage(Message message) {
-		log.info("{} [{}] ({}) RCV {}", 
+		log.debug("{} [{}] ({}) RCV {}", 
 				applicationName, instanceId, instanceIndex,
 				Util.DTF.print(message.getMessageProperties().getTimestamp().getTime()));
 	}
