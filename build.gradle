@@ -21,6 +21,9 @@ jar {
     baseName = 'cf-service-tester'
     version = '0.0.1-SNAPSHOT'
 }
+
+group = projectGroup
+version = projectVersion
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
