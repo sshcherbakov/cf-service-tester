@@ -1,26 +1,22 @@
 package io.pivotal.cf.tester.web;
 
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-//@RestController
+import io.pivotal.cf.tester.service.StateService;
+
 @Controller
 public class StartController {
 	
-	@Autowired(required=false)
-	private ConnectionFactory rabbitConnectionFactory;
-	
-	@Autowired(required=false)
-	private RedisConnectionFactory redisConnectionFactory;
+	@Autowired
+	private StateService stateService;
 	
 	@RequestMapping("/")
     public String start(Model model) {
-        model.addAttribute("statusRabbit", rabbitConnectionFactory != null);
-        model.addAttribute("statusRedis", redisConnectionFactory != null);
+        model.addAttribute("statusRabbit", stateService.isRabbitUp());
+        model.addAttribute("statusRedis", stateService.isRedisUp());
         return "start";
     }
 	

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ErrorHandler;
 
 @Configuration
 public class RabbitConfig {
@@ -21,9 +22,14 @@ public class RabbitConfig {
 	@Autowired
 	public MessageListener testMessageHandler;
 
+	@Autowired
+	public ErrorHandler testErrorHandler;
+	
 	@Bean
 	public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
-		return new RabbitAdmin(connectionFactory);
+		RabbitAdmin rabbitAdmin = new RabbitAdmin(connectionFactory);
+		rabbitAdmin.setIgnoreDeclarationExceptions(true);
+		return rabbitAdmin;
 	}
 	
 	@Bean
@@ -45,6 +51,7 @@ public class RabbitConfig {
 	    container.setConnectionFactory(connectionFactory);
 	    container.setQueues(testQueue());
 	    container.setMessageListener(new MessageListenerAdapter(testMessageHandler));
+	    container.setErrorHandler(testErrorHandler);
 	    return container;
 	}
 

@@ -14,7 +14,8 @@ import com.codahale.metrics.annotation.Timed;
 
 public class TestMessagePublisher {
 	private static Logger log = LoggerFactory.getLogger(TestMessagePublisher.class);
-		
+	
+	
 	@Value("${vcap.application.name:cf-tester}")
 	private String applicationName;
 	
@@ -27,11 +28,21 @@ public class TestMessagePublisher {
 	@Value("${rabbit.queueName:testQueue}")
 	private String rabbitQueueName;
 
-	@Autowired
+	@Autowired(required=false)
 	private RabbitTemplate rabbitTemplate;
+
+	@Autowired
+	private StateService stateService;
 	
 	@Timed
 	public void publish() {
+		
+		if(rabbitTemplate == null) {
+			log.debug("RabbitMQ Service unavailable");
+			stateService.setRabbitDown();
+			return;
+		}
+		
 		final Date now = new Date();
 		String timeString = Util.DTF.print(now.getTime());
 		
@@ -46,11 +57,17 @@ public class TestMessagePublisher {
 				.withBody(messageBody.getBytes())
 				.setTimestamp(now)
 				.build();
-				
-		rabbitTemplate.send(rabbitQueueName, message);
 		
-		log.debug(messageBody);
-
+		try {
+			rabbitTemplate.send(rabbitQueueName, message);
+			stateService.setRabbitUp();
+			log.debug(messageBody);
+		}
+		catch(Exception ex) {
+			log.debug("Publish to Rabbit failed", ex);
+			
+			stateService.setRabbitDown();
+		}
 	}
 	
 }

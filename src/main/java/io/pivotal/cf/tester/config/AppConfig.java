@@ -8,6 +8,8 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import io.pivotal.cf.tester.service.StateService;
+import io.pivotal.cf.tester.service.TestErrorHandler;
 import io.pivotal.cf.tester.service.TestMessageConsumer;
 import io.pivotal.cf.tester.service.TestMessageProducer;
 import io.pivotal.cf.tester.service.TestMessagePublisher;
@@ -22,6 +24,11 @@ public class AppConfig {
 	@Bean
 	public TestMessageConsumer testMessageHandler() {
 		return new TestMessageConsumer();
+	}
+	
+	@Bean
+	public TestErrorHandler testErrorHandler() {
+		return new TestErrorHandler();
 	}
 	
 	@Bean
@@ -45,4 +52,8 @@ public class AppConfig {
 		return taskExecutor;
 	}
 
+	@Bean
+	public StateService stateService() {
+		return new StateService();
+	}
 }
