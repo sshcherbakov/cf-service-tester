@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}") 
-        classpath("io.spring.gradle:dependency-management-plugin:0.5.1.RELEASE")
+        classpath("io.spring.gradle:dependency-management-plugin:0.5.3.RELEASE")
     }
 }
 
@@ -19,7 +19,6 @@ apply plugin: 'io.spring.dependency-management'
 
 jar {
     baseName = 'cf-service-tester'
-    version = '0.0.1-SNAPSHOT'
 }
 
 group = projectGroup
