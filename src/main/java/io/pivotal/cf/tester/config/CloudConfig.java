@@ -2,6 +2,8 @@ package io.pivotal.cf.tester.config;
 
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +16,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @Configuration
 @Profile("cloud")
 public class CloudConfig extends AbstractCloudConfig {
+	private static Logger log = LoggerFactory.getLogger(AbstractCloudConfig.class);
 
 	@Value("${application.name:testQueue}")
 	private String rabbitQueueName;
@@ -25,7 +28,13 @@ public class CloudConfig extends AbstractCloudConfig {
 
 	@Bean
 	public ConnectionFactory rabbitConnectionFactory() {
-		return connectionFactory().rabbitConnectionFactory();
+		try {
+			return connectionFactory().rabbitConnectionFactory();
+		}
+		catch(Exception ex) {
+			log.warn("Cannot create rabbitConnectionFactory. Is RabbitMQ service binding missing?", ex);
+			return null;
+		}
 	}
 	
 	@Bean
