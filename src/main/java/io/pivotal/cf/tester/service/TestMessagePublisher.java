@@ -55,9 +55,15 @@ public class TestMessagePublisher {
 		
 		Message message = MessageBuilder
 				.withBody(messageBody.getBytes())
+				.setMessageId(stateService.getNextId())
 				.setTimestamp(now)
 				.build();
 		
+		sendToRabbit(messageBody, message);
+		
+	}
+
+	private void sendToRabbit(String messageBody, Message message) {
 		try {
 			rabbitTemplate.send(rabbitQueueName, message);
 			stateService.setRabbitUp();

@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 
 @Configuration
@@ -55,18 +54,6 @@ public class RabbitConfig {
 		rabbitTemplate.setRoutingKey(rabbitQueueName);
 		return rabbitTemplate;
 	}
-//	
-//	@Bean
-//	public RabbitMessagingTemplate rabbitMessagingTemplate(RabbitTemplate rabbitTemplate) {
-//		if( rabbitTemplate == null ) {
-//			return new RabbitMessagingTemplate() {
-//				@Override
-//				public void afterPropertiesSet() {
-//				}				
-//			};
-//		}
-//		return new RabbitMessagingTemplate(rabbitTemplate);
-//	}
 	
 	@Bean
 	public SimpleMessageListenerContainer listenerContainer(ConnectionFactory connectionFactory) {

@@ -18,7 +18,18 @@ public class RedisConfig {
 	}
 	
 	@Bean
-	public RedisTemplate<String, Map<String,Object>> redisTemplate(
+	public RedisTemplate<String, Object> redisTemplate(
+			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
+		
+		RedisTemplate<String, Object> rt = new RedisTemplate<>();
+		rt.setConnectionFactory(connectionFactory);
+		rt.setKeySerializer(keySerializer);
+		rt.setHashKeySerializer(keySerializer);
+		return rt;
+	}
+
+	@Bean
+	public RedisTemplate<String, Map<String,Object>> redisConfigTemplate(
 			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
 		
 		RedisTemplate<String, Map<String,Object>> rt = new RedisTemplate<>();
@@ -27,5 +38,5 @@ public class RedisConfig {
 		rt.setHashKeySerializer(keySerializer);
 		return rt;
 	}
-
+	
 }

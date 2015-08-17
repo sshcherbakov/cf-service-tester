@@ -13,10 +13,18 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 @Profile("!cloud")
 public class StandaloneConfig {
 
+	@Value("${redis.hostname:localhost}")
+	private String redisHostname;
+
+	@Value("${redis.port:6379}")
+	private int redisPort;
+
 	@Bean
 	public JedisConnectionFactory redisConnectionFactory() {
 		JedisConnectionFactory res = new JedisConnectionFactory();
 		res.setUsePool(true);
+		res.setHostName(redisHostname);
+		res.setPort(redisPort);
 		return res;
 	}
 
