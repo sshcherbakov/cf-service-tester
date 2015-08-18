@@ -19,6 +19,9 @@ public class RabbitConfig {
 	@Value("${rabbit.queueName:testQueue}")
 	private String rabbitQueueName;
 
+	@Value("${rabbit.queue.durable:true}")
+	private boolean isRabbitQueueDurable = true;
+	
 	@Autowired
 	public MessageListener testMessageHandler;
 
@@ -34,10 +37,10 @@ public class RabbitConfig {
 		rabbitAdmin.setIgnoreDeclarationExceptions(true);
 		return rabbitAdmin;
 	}
-	
+
 	@Bean
 	public Queue testQueue() {
-	    return new Queue(rabbitQueueName);
+	    return new Queue(rabbitQueueName, isRabbitQueueDurable);
 	}
 	
 	@Bean
