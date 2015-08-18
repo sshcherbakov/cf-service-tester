@@ -28,11 +28,8 @@ public class StandaloneConfig {
 		return res;
 	}
 
-	@Value("${rabbit.hostname:localhost}")
-	private String rabbitHostname;
-
-	@Value("${rabbit.port:5672}")
-	private int rabbitPort;
+	@Value("${rabbit.addresses:localhost:5672}")
+	private String rabbitAddresses;
 	
 	@Value("${rabbit.username:guest}")
 	private String rabbitUsername;
@@ -43,8 +40,7 @@ public class StandaloneConfig {
 	@Bean
 	public ConnectionFactory rabbitConnectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-		connectionFactory.setHost(rabbitHostname);
-		connectionFactory.setPort(rabbitPort);
+		connectionFactory.setAddresses(rabbitAddresses);
 		connectionFactory.setUsername(rabbitUsername);
 	    connectionFactory.setPassword(rabbitPassword);
 	    return connectionFactory;

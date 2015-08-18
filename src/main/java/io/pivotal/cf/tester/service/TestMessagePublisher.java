@@ -66,7 +66,6 @@ public class TestMessagePublisher {
 	private void sendToRabbit(String messageBody, Message message) {
 		try {
 			rabbitTemplate.send(rabbitQueueName, message);
-			stateService.setRabbitUp();
 			log.debug(messageBody);
 		}
 		catch(Exception ex) {
