@@ -15,6 +15,9 @@ public class StandaloneConfig {
 
 	@Value("${redis.hostname:localhost}")
 	private String redisHostname;
+	
+	@Value("${redis.publisher.confirms:true}")
+	private boolean publisherConfirms = true;	
 
 	@Value("${redis.port:6379}")
 	private int redisPort;
@@ -43,6 +46,7 @@ public class StandaloneConfig {
 		connectionFactory.setAddresses(rabbitAddresses);
 		connectionFactory.setUsername(rabbitUsername);
 	    connectionFactory.setPassword(rabbitPassword);
+	    connectionFactory.setPublisherConfirms(publisherConfirms);
 	    return connectionFactory;
 	}
 		

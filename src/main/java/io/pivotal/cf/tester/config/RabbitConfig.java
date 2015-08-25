@@ -1,5 +1,12 @@
 package io.pivotal.cf.tester.config;
 
+import java.util.Collections;
+
+import org.springframework.amqp.core.AbstractExchange;
+import org.springframework.amqp.core.AcknowledgeMode;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.Binding.DestinationType;
+import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -19,8 +26,20 @@ public class RabbitConfig {
 	@Value("${rabbit.queueName:testQueue}")
 	private String rabbitQueueName;
 
-	@Value("${rabbit.queue.durable:true}")
-	private boolean isRabbitQueueDurable = true;
+	@Value("${rabbit.exchangeName:testExchange}")
+	private String rabbitExchangeName;
+	
+	@Value("${rabbit.durable:true}")
+	private boolean isRabbitDurable = true;
+	
+	@Value("${rabbit.exclusive:false}")
+	private boolean isRabbitExclusive = false;
+	
+	@Value("${rabbit.autodelete:false}")
+	private boolean isRabbitAutoDelete = false;
+	
+	@Value("${rabbit.ackmode:AUTO}")
+	private AcknowledgeMode rabbitAckMode = AcknowledgeMode.AUTO;
 	
 	@Autowired
 	public MessageListener testMessageHandler;
@@ -39,8 +58,18 @@ public class RabbitConfig {
 	}
 
 	@Bean
+	public AbstractExchange testExchange() {
+	    return new FanoutExchange(rabbitExchangeName, isRabbitDurable, isRabbitAutoDelete);
+	}
+	
+	@Bean
 	public Queue testQueue() {
-	    return new Queue(rabbitQueueName, isRabbitQueueDurable);
+		return new Queue(rabbitQueueName, isRabbitDurable, isRabbitExclusive, isRabbitAutoDelete);
+	}
+	
+	@Bean
+	public Binding testBinding() {
+		return new Binding(rabbitQueueName, DestinationType.QUEUE, rabbitExchangeName, rabbitQueueName, Collections.emptyMap());
 	}
 	
 	@Bean
@@ -65,9 +94,10 @@ public class RabbitConfig {
 		}
 	    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
 	    container.setConnectionFactory(connectionFactory);
-	    container.setQueues(testQueue());
+	    container.setQueueNames(rabbitQueueName);
 	    container.setMessageListener(new MessageListenerAdapter(testMessageHandler));
 	    container.setErrorHandler(testErrorHandler);
+	    container.setAcknowledgeMode(rabbitAckMode);
 	    return container;
 	}
 
