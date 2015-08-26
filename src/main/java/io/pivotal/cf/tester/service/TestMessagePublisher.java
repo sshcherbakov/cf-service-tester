@@ -35,6 +35,9 @@ public class TestMessagePublisher {
 	@Value("${rabbit.queueName:testQueue}")
 	private String rabbitQueueName;
 	
+	@Value("${rabbit.publishers:2}")
+	private int numPublishers;
+	
 	@Autowired(required=false)
 	private RabbitTemplate rabbitTemplate;
 
@@ -61,6 +64,12 @@ public class TestMessagePublisher {
 				log.debug("id={} ack={} cause={}", correlationData.getId(), ack, cause);
 			}
 		});
+		
+		for(int i=0; i<numPublishers; i++) {
+			redisTemplate.delete(utils.getPublishedKey(i));
+			redisTemplate.delete(utils.getPublishedZKey(i));
+		}
+		
 	}
 	
 	@Timed

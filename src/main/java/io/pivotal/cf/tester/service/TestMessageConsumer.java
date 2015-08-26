@@ -1,5 +1,7 @@
 package io.pivotal.cf.tester.service;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -29,7 +31,10 @@ public class TestMessageConsumer implements MessageListener {
 	
 	@Value("${vcap.application.instance_id:cf-tester}")
 	private String instanceId;
-	
+
+	@Value("${rabbit.consumeRate:1000}")
+	private int consumeRate;
+
 	private final int instanceIndex;
 
 	@Autowired(required=false)
@@ -42,6 +47,18 @@ public class TestMessageConsumer implements MessageListener {
 		this.instanceIndex = id;
 	}
 	
+	@PostConstruct
+	void init() {
+		if(redisTemplate != null) {
+			try {
+				redisTemplate.delete(utils.getReceivedKey(instanceIndex));
+			}
+			catch(Exception ex) {
+				log.warn("Redis in unavailable");
+			}
+		}
+	}
+
 	@Timed
 	@Override
 	public void onMessage(Message message) {
@@ -64,6 +81,8 @@ public class TestMessageConsumer implements MessageListener {
 			saveToRedis(messageId);
 			
 			stateService.setRedisUp();
+			
+			Thread.sleep(consumeRate);
 		}
 		catch(Exception ex) {
 			log.debug("Checkpoint in Redis failed", ex);
