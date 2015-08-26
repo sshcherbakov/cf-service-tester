@@ -3,7 +3,6 @@ package io.pivotal.cf.tester.config;
 import java.util.Collections;
 
 import org.springframework.amqp.core.AbstractExchange;
-import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Binding.DestinationType;
 import org.springframework.amqp.core.FanoutExchange;
@@ -38,8 +37,11 @@ public class RabbitConfig {
 	@Value("${rabbit.autodelete:false}")
 	private boolean isRabbitAutoDelete = false;
 	
-	@Value("${rabbit.ackmode:AUTO}")
-	private AcknowledgeMode rabbitAckMode = AcknowledgeMode.AUTO;
+	@Value("${rabbit.autodeclare:true}")
+	private boolean isRabbitAutoDeclare = true;
+	
+	@Value("${rabbit.concurrent.consumers:1}")
+	private int rabbitConcurrentConsumers = 1;
 	
 	@Autowired
 	public MessageListener testMessageHandler;
@@ -97,7 +99,8 @@ public class RabbitConfig {
 	    container.setQueueNames(rabbitQueueName);
 	    container.setMessageListener(new MessageListenerAdapter(testMessageHandler));
 	    container.setErrorHandler(testErrorHandler);
-	    container.setAcknowledgeMode(rabbitAckMode);
+	    container.setConcurrentConsumers(rabbitConcurrentConsumers);
+	    container.setAutoDeclare(isRabbitAutoDeclare);
 	    return container;
 	}
 

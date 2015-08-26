@@ -18,10 +18,10 @@ public class RedisConfig {
 	}
 	
 	@Bean
-	public RedisTemplate<String, Object> redisTemplate(
+	public RedisTemplate<String, Long> redisTemplate(
 			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
 		
-		RedisTemplate<String, Object> rt = new RedisTemplate<>();
+		RedisTemplate<String, Long> rt = new RedisTemplate<>();
 		rt.setConnectionFactory(connectionFactory);
 		rt.setKeySerializer(keySerializer);
 		rt.setHashKeySerializer(keySerializer);

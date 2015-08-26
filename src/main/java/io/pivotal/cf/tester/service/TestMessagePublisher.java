@@ -13,21 +13,19 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.codahale.metrics.annotation.Timed;
+
+import io.pivotal.cf.tester.util.Util;
+import io.pivotal.cf.tester.util.UtilBean;
 
 public class TestMessagePublisher {
 	private static Logger log = LoggerFactory.getLogger(TestMessagePublisher.class);
 	
-	
-	@Value("${vcap.application.name:cf-tester}")
-	private String applicationName;
-	
-	@Value("${vcap.application.instance_id:cf-tester}")
-	private String instanceId;
-	
-	@Value("${vcap.application.instance_index:0}")
-	private int instanceIndex;
+
+	@Autowired
+	private UtilBean utils;
 	
 	@Value("${rabbit.exchangeName:testExchange}")
 	private String rabbitExchangeName;
@@ -38,6 +36,9 @@ public class TestMessagePublisher {
 	@Autowired(required=false)
 	private RabbitTemplate rabbitTemplate;
 
+	@Autowired(required=false)
+	private RedisTemplate< String, Long > redisTemplate;
+
 	@Autowired
 	private StateService stateService;
 
@@ -47,7 +48,7 @@ public class TestMessagePublisher {
 		rabbitTemplate.setConfirmCallback(new ConfirmCallback() {
 			@Override
 			public void confirm(CorrelationData correlationData, boolean ack, String cause) {
-				log.info("id={} ack={} cause={}", correlationData.getId(), ack, cause);
+				log.debug("id={} ack={} cause={}", correlationData.getId(), ack, cause);
 			}
 		});
 	}
@@ -64,21 +65,21 @@ public class TestMessagePublisher {
 		final Date now = new Date();
 		String timeString = Util.DTF.print(now.getTime());
 		
-		String messageBody = new StringBuilder(applicationName)
-			.append(" [").append(instanceId).append("]")
-			.append(" (").append(instanceIndex).append(")")
+		String messageBody = new StringBuilder()
+			.append(" (").append(utils.getKeyPrefix()).append(")")
 			.append(" PUB ")
 			.append(timeString)
 			.toString();
 		
+		long nextId = stateService.getNextId();
 		Message message = MessageBuilder
 				.withBody(messageBody.getBytes())
-				.setMessageId(stateService.getNextId())
+				.setMessageId( Long.toString(nextId) )
 				.setTimestamp(now)
 				.build();
 		
 		sendToRabbit(messageBody, message);
-		
+		saveToRedis(nextId);
 	}
 
 	private void sendToRabbit(String messageBody, final Message message) {
@@ -94,4 +95,18 @@ public class TestMessagePublisher {
 		}
 	}
 	
+	/**
+	 * Save the message id and the timestamp when it has been 
+	 * published as a score to the Redis ZSET 
+	 * 
+	 * @param id
+	 */
+	private void saveToRedis(long id) {
+		
+		long time = new Date().getTime();
+		redisTemplate.boundZSetOps( utils.getPublishedKey() )
+			.add(id, time);
+		
+	}
+
 }

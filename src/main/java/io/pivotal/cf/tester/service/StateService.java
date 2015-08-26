@@ -61,14 +61,14 @@ public class StateService implements InitializingBean {
 		isRedisUp = redisTemplate != null;
 	}
 
-	public String getNextId() {
+	public long getNextId() {
 		long id = nextId.getAndIncrement();
 		if( id == maxMessageId ) {		// only one thread will see maxMessageId
 			id = 0;
 			nextId.set(id + 1);
 			resetCheckpoints();
 		}
-		return Long.toString(id);
+		return id;
 	}
 	
 	

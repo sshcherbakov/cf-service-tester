@@ -1,5 +1,7 @@
 package io.pivotal.cf.tester.service;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -14,8 +16,15 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import com.codahale.metrics.annotation.Timed;
 
+import io.pivotal.cf.tester.util.Util;
+import io.pivotal.cf.tester.util.UtilBean;
+
 public class TestMessageConsumer implements MessageListener {
 	private static Logger log = LoggerFactory.getLogger(TestMessageConsumer.class);
+
+	
+	@Autowired
+	private UtilBean utils;
 
 	@Value("${vcap.application.name:cf-tester}")
 	private String applicationName;
@@ -27,7 +36,7 @@ public class TestMessageConsumer implements MessageListener {
 	private int instanceIndex;
 
 	@Autowired(required=false)
-	private RedisTemplate< String, Object > redisTemplate;
+	private RedisTemplate< String, Long > redisTemplate;
 	
 	@Autowired
 	private StateService stateService;
@@ -35,11 +44,11 @@ public class TestMessageConsumer implements MessageListener {
 	@Timed
 	@Override
 	public void onMessage(Message message) {
-		long messageId = Long.parseLong( message.getMessageProperties().getMessageId() );
-		log.debug("{} [{}] ({}) RCV id:{} {}", 
-				applicationName, instanceId, instanceIndex,
-				messageId,
-				Util.DTF.print(message.getMessageProperties().getTimestamp().getTime()));
+		String messageIdStr = message.getMessageProperties().getMessageId();
+		long messageId = Long.parseLong( messageIdStr );
+		long msgTime = message.getMessageProperties().getTimestamp().getTime();
+		
+		log.debug("({}) RCV id:{} {}", utils.getKeyPrefix(), messageId,	Util.DTF.print(msgTime));
 		
 		if(redisTemplate == null) {
 			log.debug("Redis Service unavailable");
@@ -48,12 +57,11 @@ public class TestMessageConsumer implements MessageListener {
 		}
 		
 		try {
-			if( setBit(applicationName, messageId, true) ) {
-				log.warn("{} [{}] ({}) RCV DUP id:{} {}", 
-						applicationName, instanceId, instanceIndex,
-						messageId,
-						Util.DTF.print(message.getMessageProperties().getTimestamp().getTime()));
+			if( checkForDups(messageId) ) {
+				log.warn("({}) RCV DUP id:{} {}", utils.getKeyPrefix(),	messageId,	Util.DTF.print(msgTime));
 			}
+			saveToRedis(messageId);
+			
 			stateService.setRedisUp();
 		}
 		catch(Exception ex) {
@@ -63,16 +71,47 @@ public class TestMessageConsumer implements MessageListener {
 		}
 	}
 	
-	private Boolean setBit( final String key, final long offset, final boolean value ) {
+	/**
+	 * Checks for the duplicate messages by verifying the ZSet for the responded messages
+	 * @param messageId
+	 * @return true if the set already contains the messageId and thus the duplicate is detected
+	 */
+	private boolean checkForDups( final long messageId ) {
+		return redisTemplate.boundZSetOps( utils.getReceivedKey() )
+			.score(messageId) != null;
+	}
+	
+	/**
+	 * Checks for the duplicate messages by setting the bit in a bit-array at the messageId position
+	 * @param messageId
+	 * @return true if the bit had already been set before and thus the duplicate is detected
+	 */
+	@SuppressWarnings("unused")
+	private boolean checkForDupsByBits( final long messageId ) {
 		return redisTemplate.execute(
 			new RedisCallback< Boolean >() {
 				@SuppressWarnings("unchecked")
 				@Override
 				public Boolean doInRedis( RedisConnection connection ) throws DataAccessException {
-					return connection.setBit( ( ( RedisSerializer< String > )redisTemplate.getKeySerializer() ).serialize( key ), offset, value );
+					return connection.setBit( ( ( RedisSerializer< String > )redisTemplate.getKeySerializer() )
+							.serialize( utils.getKeyPrefix() ), messageId, true );
 				}
 			}
 		);
+	}
+
+	/**
+	 * Save the message id and the timestamp when it has been 
+	 * published as a score to the Redis ZSET 
+	 * 
+	 * @param id
+	 */
+	private void saveToRedis(long id) {
+		
+		long time = new Date().getTime();
+		redisTemplate.boundZSetOps( utils.getReceivedKey() )
+			.add(id, time);
+		
 	}
 
 }

@@ -1,4 +1,4 @@
-package io.pivotal.cf.tester.service;
+package io.pivotal.cf.tester.util;
 
 import org.joda.time.format.DateTimeFormatter;
 

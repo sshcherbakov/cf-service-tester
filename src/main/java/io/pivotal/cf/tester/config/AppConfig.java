@@ -8,11 +8,13 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import io.pivotal.cf.tester.service.ConsistencyChecker;
 import io.pivotal.cf.tester.service.StateService;
 import io.pivotal.cf.tester.service.TestErrorHandler;
 import io.pivotal.cf.tester.service.TestMessageConsumer;
 import io.pivotal.cf.tester.service.TestMessageProducer;
 import io.pivotal.cf.tester.service.TestMessagePublisher;
+import io.pivotal.cf.tester.util.UtilBean;
 
 @EnableScheduling
 @Configuration
@@ -20,6 +22,11 @@ public class AppConfig {
 	
 	@Value("${rabbit.publishers:1}")
 	private int publishers;
+	
+	@Bean
+	public UtilBean utilBean() {
+		return new UtilBean();
+	}
 
 	@Bean
 	public TestMessageConsumer testMessageHandler() {
@@ -42,6 +49,11 @@ public class AppConfig {
 	}
 	
 	@Bean
+	public ConsistencyChecker consistencyChecker() {
+		return new ConsistencyChecker();
+	}
+	
+	@Bean
 	@Qualifier("producer")
 	public TaskExecutor publisherTaskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
@@ -56,4 +68,5 @@ public class AppConfig {
 	public StateService stateService() {
 		return new StateService();
 	}
+	
 }
