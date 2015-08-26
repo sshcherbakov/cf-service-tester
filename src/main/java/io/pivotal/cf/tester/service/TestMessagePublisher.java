@@ -99,13 +99,16 @@ public class TestMessagePublisher {
 	 * Save the message id and the timestamp when it has been 
 	 * published as a score to the Redis ZSET 
 	 * 
-	 * @param id
+	 * @param messageId
 	 */
-	private void saveToRedis(long id) {
+	private void saveToRedis(long messageId) {
 		
 		long time = new Date().getTime();
-		redisTemplate.boundZSetOps( utils.getPublishedKey() )
-			.add(id, time);
+		redisTemplate.boundZSetOps( utils.getPublishedZKey() )
+			.add(messageId, time);
+		
+		redisTemplate.boundSetOps( utils.getPublishedKey() )
+			.add(messageId);
 		
 	}
 

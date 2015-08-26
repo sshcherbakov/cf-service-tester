@@ -13,10 +13,14 @@ public class UtilBean {
 	@Value("${vcap.application.instance_index:0}")
 	private int instanceIndex;
 
+	public String getPublishedZKey() {
+		return getKeyPrefix() + ".zpublished";
+	}
+
 	public String getPublishedKey() {
 		return getKeyPrefix() + ".published";
 	}
-
+	
 	public String getReceivedKey() {
 		return getKeyPrefix() + ".received";
 	}

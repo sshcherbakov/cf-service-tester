@@ -1,7 +1,5 @@
 package io.pivotal.cf.tester.service;
 
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -77,8 +75,8 @@ public class TestMessageConsumer implements MessageListener {
 	 * @return true if the set already contains the messageId and thus the duplicate is detected
 	 */
 	private boolean checkForDups( final long messageId ) {
-		return redisTemplate.boundZSetOps( utils.getReceivedKey() )
-			.score(messageId) != null;
+		return redisTemplate.boundSetOps( utils.getReceivedKey() )
+			.isMember(messageId);
 	}
 	
 	/**
@@ -101,16 +99,14 @@ public class TestMessageConsumer implements MessageListener {
 	}
 
 	/**
-	 * Save the message id and the timestamp when it has been 
-	 * published as a score to the Redis ZSET 
+	 * Save the message id in the Redis SET 
 	 * 
-	 * @param id
+	 * @param messageId
 	 */
-	private void saveToRedis(long id) {
+	private void saveToRedis(long messageId) {
 		
-		long time = new Date().getTime();
-		redisTemplate.boundZSetOps( utils.getReceivedKey() )
-			.add(id, time);
+		redisTemplate.boundSetOps( utils.getReceivedKey() )
+			.add(messageId);
 		
 	}
 
