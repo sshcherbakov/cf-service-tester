@@ -17,10 +17,12 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.stereotype.Component;
 
 import io.pivotal.cf.tester.service.TestMessageConsumer;
+import io.pivotal.cf.tester.util.Util;
 
 @Component
 public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
+	private final String	applicationInstanceId;
 	private final int 		rabbitConsumerInstances;
 	private final int 		rabbitConcurrentConsumers;
 	private final boolean 	rabbitAutoDeclare;
@@ -34,14 +36,15 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
 		Properties props = new Properties();
 		props.load(this.getClass().getClassLoader().getResourceAsStream("application.properties"));
 		
-		this.rabbitConsumerInstances 	= Integer.parseInt(props.getProperty("rabbit.consumer.instances", "1"));
-		this.rabbitConcurrentConsumers 	= Integer.parseInt(props.getProperty("rabbit.concurrent.consumers", "1"));
-		this.rabbitAutoDeclare 			= Boolean.parseBoolean(props.getProperty("rabbit.autodeclare", "true"));
-		this.rabbitDurable 				= Boolean.parseBoolean(props.getProperty("rabbit.durable", "true"));
-		this.rabbitExclusive 			= Boolean.parseBoolean(props.getProperty("rabbit.exclusive", "false"));
-		this.rabbitAutoDelete			= Boolean.parseBoolean(props.getProperty("rabbit.autodelete", "false"));
-		this.rabbitExchangeName			= props.getProperty("rabbit.exchangeName", "testExchange");
-		this.rabbitQueueName 			= props.getProperty("rabbit.queueName", "testQueue");
+		this.applicationInstanceId 		= Util.getAppProperty(props, "vcap.application.instance_id", "cf-tester");
+		this.rabbitConsumerInstances 	= Util.getAppPropertyInt(props, "rabbit.consumer.instances", "1");
+		this.rabbitConcurrentConsumers 	= Util.getAppPropertyInt(props, "rabbit.concurrent.consumers", "1");
+		this.rabbitAutoDeclare 			= Util.getAppPropertyBool(props, "rabbit.autodeclare", "true");
+		this.rabbitDurable 				= Util.getAppPropertyBool(props, "rabbit.durable", "true");
+		this.rabbitExclusive 			= Util.getAppPropertyBool(props, "rabbit.exclusive", "false");
+		this.rabbitAutoDelete			= Util.getAppPropertyBool(props, "rabbit.autodelete", "false");
+		this.rabbitExchangeName			= Util.getAppProperty(props, "rabbit.exchangeName", "testExchange");
+		this.rabbitQueueName 			= Util.getAppProperty(props, "rabbit.queueName", "testQueue");
 	}
     
     @Override
@@ -50,7 +53,7 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
     	BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
     	for(int i=0; i < rabbitConsumerInstances; i++) {
 
-    		String indexedQueueName = rabbitQueueName + i;
+    		String indexedQueueName = rabbitQueueName + "." + applicationInstanceId + "." + i;
     		
 			registry.registerBeanDefinition("testMessageHandler" + i, 
     				BeanDefinitionBuilder.genericBeanDefinition(TestMessageConsumer.class)

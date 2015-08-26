@@ -53,6 +53,10 @@ public class AppConfig {
 	@Bean
 	@Qualifier("producer")
 	public TaskExecutor publisherTaskExecutor() {
+		if(publishers <= 0) {
+			return null;
+		}
+		
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(publishers);
 		taskExecutor.setMaxPoolSize(publishers);

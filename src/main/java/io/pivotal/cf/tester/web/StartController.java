@@ -20,28 +20,4 @@ public class StartController {
         return "start";
     }
 	
-/*	
-	@Autowired
-	private RedisTemplate<String, Map<String,Object>> redisTemplate;
-
-	@RequestMapping(value="/olhc/{ticker}", method=RequestMethod.GET)
-	@ResponseBody
-    public Map<String,Object> getOlhc(@PathVariable String ticker) {
-		return redisTemplate.boundValueOps(ticker).get();
-    }
-	
-	@RequestMapping(value="/olhc/{ticker}", method=RequestMethod.PUT)
-	public void createOlhc(@PathVariable("ticker") String ticker,
-			@RequestBody Config olhc) {
-		
-		Map<String, Object> molhc = new HashMap<String,Object>();
-		molhc.put("ticker", ticker);
-		molhc.put("time", new Date());
-		molhc.put("open", olhc.getOpen());
-		molhc.put("low", olhc.getLow());
-		molhc.put("high", olhc.getHigh());
-		molhc.put("close", olhc.getClose());
-		redisTemplate.boundValueOps(ticker).set(molhc);
-	}
-*/	
 }
