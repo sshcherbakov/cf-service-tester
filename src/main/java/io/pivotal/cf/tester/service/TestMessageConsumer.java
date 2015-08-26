@@ -66,7 +66,7 @@ public class TestMessageConsumer implements MessageListener {
 		long messageId = Long.parseLong( messageIdStr );
 		long msgTime = message.getMessageProperties().getTimestamp().getTime();
 		
-		log.debug("({}) RCV id:{} {}", utils.getReceivedKey(instanceIndex), messageId,	Util.DTF.print(msgTime));
+		log.debug("({}) RCV id:[{}] {}", utils.getReceivedKey(instanceIndex), messageId,	Util.DTF.print(msgTime));
 		
 		if(redisTemplate == null) {
 			log.debug("Redis Service unavailable");

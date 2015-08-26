@@ -8,6 +8,7 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -15,6 +16,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.codahale.metrics.annotation.Timed;
@@ -72,15 +74,11 @@ public class TestMessagePublisher {
 		
 	}
 	
+	
+	
 	@Timed
 	public void publish() {
-		
-		if(rabbitTemplate == null) {
-			log.debug("RabbitMQ Service unavailable");
-			stateService.setRabbitDown();
-			return;
-		}
-		
+				
 		final Date now = new Date();
 		String timeString = Util.DTF.print(now.getTime());
 		
@@ -96,22 +94,38 @@ public class TestMessagePublisher {
 				.setMessageId( Long.toString(nextId) )
 				.setTimestamp(now)
 				.build();
-		
-		sendToRabbit(messageBody, message);
-		saveToRedis(nextId);
-	}
-
-	private void sendToRabbit(String messageBody, final Message message) {
-		try {
-			rabbitTemplate.send(rabbitExchangeName, rabbitQueueName, 
-					message, new CorrelationData(message.getMessageProperties().getMessageId()));
-			log.debug(messageBody);
-		}
-		catch(Exception ex) {
-			log.debug("Publish to Rabbit failed", ex);
 			
+		try {
+			
+			sendToRabbit(messageBody, message);
+			saveToRedis(nextId);
+			
+		}
+		catch(AmqpException ex) {
+			log.warn("Publish of [{}] to RabbitMQ has failed", nextId);
 			stateService.setRabbitDown();
 		}
+		catch(DataAccessException ex) {
+			log.warn("Saving of [{}] to Redis has failed", nextId);
+			stateService.setRedisDown();
+		}
+		
+	}
+
+	
+	
+	private void sendToRabbit(String messageBody, final Message message) {
+		if(rabbitTemplate == null) {
+			log.debug("RabbitMQ Service unavailable");
+			stateService.setRabbitDown();
+			return;
+		}
+
+		rabbitTemplate.send(rabbitExchangeName, rabbitQueueName, 
+				message, new CorrelationData(message.getMessageProperties().getMessageId()));
+		
+		log.debug(messageBody);
+		stateService.setRabbitUp();
 	}
 	
 	/**
@@ -121,14 +135,21 @@ public class TestMessagePublisher {
 	 * @param messageId
 	 */
 	private void saveToRedis(long messageId) {
-		
+		if(redisTemplate == null) {
+			log.debug("Redis Service unavailable");
+			stateService.setRedisDown();
+			return;
+		}
+			
 		long time = new Date().getTime();
 		redisTemplate.boundZSetOps( utils.getPublishedZKey(instanceIndex.get()) )
 			.add(messageId, time);
 		
 		redisTemplate.boundSetOps( utils.getPublishedKey(instanceIndex.get()) )
 			.add(messageId);
-		
+	
+		stateService.setRedisUp();
+			
 	}
 
 }
