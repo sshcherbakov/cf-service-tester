@@ -11,7 +11,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import io.pivotal.cf.tester.service.ConsistencyChecker;
 import io.pivotal.cf.tester.service.StateService;
 import io.pivotal.cf.tester.service.TestErrorHandler;
-import io.pivotal.cf.tester.service.TestMessageConsumer;
 import io.pivotal.cf.tester.service.TestMessageProducer;
 import io.pivotal.cf.tester.service.TestMessagePublisher;
 import io.pivotal.cf.tester.util.UtilBean;
@@ -23,16 +22,14 @@ public class AppConfig {
 	@Value("${rabbit.publishers:1}")
 	private int publishers;
 	
+	@Value("${rabbit.consumer.instances:1}")
+	int rabbitConsumerInstances;
+	
 	@Bean
 	public UtilBean utilBean() {
 		return new UtilBean();
 	}
 
-	@Bean
-	public TestMessageConsumer testMessageHandler() {
-		return new TestMessageConsumer();
-	}
-	
 	@Bean
 	public TestErrorHandler testErrorHandler() {
 		return new TestErrorHandler();

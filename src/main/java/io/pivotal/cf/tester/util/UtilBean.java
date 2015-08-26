@@ -10,28 +10,27 @@ public class UtilBean {
 	@Value("${vcap.application.instance_id:cf-tester}")
 	private String instanceId;
 	
-	@Value("${vcap.application.instance_index:0}")
-	private int instanceIndex;
-
-	public String getPublishedZKey() {
-		return getKeyPrefix() + ".zpublished";
+	public String getPublishedZKey(int instanceIndex) {
+		return getKeyPrefix("zpublished", instanceIndex);
 	}
 
-	public String getPublishedKey() {
-		return getKeyPrefix() + ".published";
+	public String getPublishedKey(int instanceIndex) {
+		return getKeyPrefix("published", instanceIndex);
 	}
 	
-	public String getReceivedKey() {
-		return getKeyPrefix() + ".received";
+	public String getReceivedKey(int instanceIndex) {
+		return getKeyPrefix("received", instanceIndex);
 	}
 
-	public String getKeyPrefix() {
+	public String getKeyPrefix(String prefix, int instanceIndex) {
 		return new StringBuilder(applicationName)
 				.append(".")
 				.append(instanceId)
 				.append(".")
+				.append(prefix)
+				.append(".")
 				.append(instanceIndex)
 				.toString();
 	}
-
+	
 }

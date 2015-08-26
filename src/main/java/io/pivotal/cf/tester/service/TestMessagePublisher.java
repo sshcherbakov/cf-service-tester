@@ -1,6 +1,8 @@
 package io.pivotal.cf.tester.service;
 
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 
@@ -42,6 +44,14 @@ public class TestMessagePublisher {
 	@Autowired
 	private StateService stateService;
 
+	private AtomicInteger instanceIdCounter = new AtomicInteger(0);
+	private ThreadLocal<Integer> instanceIndex = ThreadLocal.withInitial(new Supplier<Integer>() {
+		@Override
+		public Integer get() {
+			return instanceIdCounter.getAndIncrement();
+		}
+	});
+		
 	@PostConstruct
 	void init() {
 		
@@ -66,7 +76,7 @@ public class TestMessagePublisher {
 		String timeString = Util.DTF.print(now.getTime());
 		
 		String messageBody = new StringBuilder()
-			.append(" (").append(utils.getKeyPrefix()).append(")")
+			.append(" (").append(utils.getPublishedKey(instanceIndex.get())).append(")")
 			.append(" PUB ")
 			.append(timeString)
 			.toString();
@@ -104,10 +114,10 @@ public class TestMessagePublisher {
 	private void saveToRedis(long messageId) {
 		
 		long time = new Date().getTime();
-		redisTemplate.boundZSetOps( utils.getPublishedZKey() )
+		redisTemplate.boundZSetOps( utils.getPublishedZKey(instanceIndex.get()) )
 			.add(messageId, time);
 		
-		redisTemplate.boundSetOps( utils.getPublishedKey() )
+		redisTemplate.boundSetOps( utils.getPublishedKey(instanceIndex.get()) )
 			.add(messageId);
 		
 	}

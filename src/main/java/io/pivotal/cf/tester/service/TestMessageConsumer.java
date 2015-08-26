@@ -30,14 +30,17 @@ public class TestMessageConsumer implements MessageListener {
 	@Value("${vcap.application.instance_id:cf-tester}")
 	private String instanceId;
 	
-	@Value("${vcap.application.instance_index:0}")
-	private int instanceIndex;
+	private final int instanceIndex;
 
 	@Autowired(required=false)
 	private RedisTemplate< String, Long > redisTemplate;
 	
 	@Autowired
 	private StateService stateService;
+	
+	public TestMessageConsumer(int id) {
+		this.instanceIndex = id;
+	}
 	
 	@Timed
 	@Override
@@ -46,7 +49,7 @@ public class TestMessageConsumer implements MessageListener {
 		long messageId = Long.parseLong( messageIdStr );
 		long msgTime = message.getMessageProperties().getTimestamp().getTime();
 		
-		log.debug("({}) RCV id:{} {}", utils.getKeyPrefix(), messageId,	Util.DTF.print(msgTime));
+		log.debug("({}) RCV id:{} {}", utils.getReceivedKey(instanceIndex), messageId,	Util.DTF.print(msgTime));
 		
 		if(redisTemplate == null) {
 			log.debug("Redis Service unavailable");
@@ -56,7 +59,7 @@ public class TestMessageConsumer implements MessageListener {
 		
 		try {
 			if( checkForDups(messageId) ) {
-				log.warn("({}) RCV DUP id:{} {}", utils.getKeyPrefix(),	messageId,	Util.DTF.print(msgTime));
+				log.warn("({}) RCV DUP id:{} {}", utils.getReceivedKey(instanceIndex),	messageId,	Util.DTF.print(msgTime));
 			}
 			saveToRedis(messageId);
 			
@@ -75,7 +78,7 @@ public class TestMessageConsumer implements MessageListener {
 	 * @return true if the set already contains the messageId and thus the duplicate is detected
 	 */
 	private boolean checkForDups( final long messageId ) {
-		return redisTemplate.boundSetOps( utils.getReceivedKey() )
+		return redisTemplate.boundSetOps( utils.getReceivedKey(instanceIndex) )
 			.isMember(messageId);
 	}
 	
@@ -92,7 +95,7 @@ public class TestMessageConsumer implements MessageListener {
 				@Override
 				public Boolean doInRedis( RedisConnection connection ) throws DataAccessException {
 					return connection.setBit( ( ( RedisSerializer< String > )redisTemplate.getKeySerializer() )
-							.serialize( utils.getKeyPrefix() ), messageId, true );
+							.serialize( utils.getReceivedKey(instanceIndex) ), messageId, true );
 				}
 			}
 		);
@@ -105,7 +108,7 @@ public class TestMessageConsumer implements MessageListener {
 	 */
 	private void saveToRedis(long messageId) {
 		
-		redisTemplate.boundSetOps( utils.getReceivedKey() )
+		redisTemplate.boundSetOps( utils.getReceivedKey(instanceIndex) )
 			.add(messageId);
 		
 	}
