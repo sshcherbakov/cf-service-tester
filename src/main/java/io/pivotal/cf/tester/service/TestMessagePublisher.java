@@ -12,7 +12,6 @@ import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +23,18 @@ import com.codahale.metrics.annotation.Timed;
 import io.pivotal.cf.tester.util.Util;
 import io.pivotal.cf.tester.util.UtilBean;
 
+/**
+ * An instance of this class is responsible to send a test message to the 
+ * configured RabbitMQ destination exchange.
+ * The class is configured to support RabbitMQ Publisher Confirms feature.
+ * 
+ * When a message is successfully confirmed by the RabbitMQ broker, its ID
+ * gets stored in Redis in order to enable the {@link ConsistencyChecker} to
+ * verify whether the message has been lost along the way to all consumers. 
+ * 
+ * @author sshcherbakov
+ *
+ */
 public class TestMessagePublisher {
 	private static Logger log = LoggerFactory.getLogger(TestMessagePublisher.class);
 	
@@ -60,11 +71,24 @@ public class TestMessagePublisher {
 	@PostConstruct
 	void init() {
 		
-		rabbitTemplate.setConfirmCallback(new ConfirmCallback() {
-			@Override
-			public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+		rabbitTemplate.setConfirmCallback( (correlationData, ack, cause) -> {
 				log.debug("id={} ack={} cause={}", correlationData.getId(), ack, cause);
-			}
+				long msgId = -1;
+				try {
+					if( ack ) {
+						msgId = Long.parseLong(correlationData.getId());
+						saveToRedis( msgId );
+					}
+					else {
+						log.warn("Message [{}] has NOT been confirmed");
+					}
+				
+				}
+				catch(DataAccessException ex) {
+					log.warn("Saving of [{}] to Redis has failed", msgId);
+					stateService.setRedisDown();
+				}
+
 		});
 		
 		for(int i=0; i<numPublishers; i++) {
@@ -73,7 +97,6 @@ public class TestMessagePublisher {
 		}
 		
 	}
-	
 	
 	
 	@Timed
@@ -95,24 +118,11 @@ public class TestMessagePublisher {
 				.setTimestamp(now)
 				.build();
 			
-		try {
 			
-			sendToRabbit(messageBody, message);
-			saveToRedis(nextId);
-			
-		}
-		catch(AmqpException ex) {
-			log.warn("Publish of [{}] to RabbitMQ has failed", nextId);
-			stateService.setRabbitDown();
-		}
-		catch(DataAccessException ex) {
-			log.warn("Saving of [{}] to Redis has failed", nextId);
-			stateService.setRedisDown();
-		}
-		
+		sendToRabbit(messageBody, message);
+					
 	}
 
-	
 	
 	private void sendToRabbit(String messageBody, final Message message) {
 		if(rabbitTemplate == null) {
@@ -120,12 +130,24 @@ public class TestMessagePublisher {
 			stateService.setRabbitDown();
 			return;
 		}
-
-		rabbitTemplate.send(rabbitExchangeName, rabbitQueueName, 
-				message, new CorrelationData(message.getMessageProperties().getMessageId()));
 		
-		log.debug(messageBody);
-		stateService.setRabbitUp();
+		String messageId = message.getMessageProperties().getMessageId();
+		try {
+			
+			rabbitTemplate.send(rabbitExchangeName, rabbitQueueName, 
+					message, new CorrelationData(messageId));
+			
+			log.debug("Published {}", messageBody);
+			stateService.setRabbitUp();
+			
+		}
+		catch(AmqpException ex) {
+			log.warn("({}) Publish of [{}] to RabbitMQ has failed",
+					utils.getPublishedKey(instanceIndex.get()), messageId);
+			
+			stateService.setRabbitDown();
+		}
+		
 	}
 	
 	/**
