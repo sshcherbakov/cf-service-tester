@@ -1,5 +1,7 @@
 package io.pivotal.cf.tester.service;
 
+import java.util.Date;
+
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
@@ -62,9 +64,24 @@ public class TestMessageConsumer implements MessageListener {
 	@Timed
 	@Override
 	public void onMessage(Message message) {
-		String messageIdStr = message.getMessageProperties().getMessageId();
-		long messageId = Long.parseLong( messageIdStr );
-		long msgTime = message.getMessageProperties().getTimestamp().getTime();
+		long messageId = -1;
+		long msgTime = -1;
+		try {
+			String messageIdStr = message.getMessageProperties().getMessageId();
+			messageId = Long.parseLong( messageIdStr );
+			Date timestamp = message.getMessageProperties().getTimestamp();
+			if(timestamp != null) {
+				msgTime = timestamp.getTime();
+			}
+			else {
+				log.error("Unexpected message {}", message);
+				return;
+			}
+		}
+		catch(NumberFormatException nfe) {
+			log.error("Unexpected message {}", message);
+			return;
+		}
 		
 		log.debug("({}) RCV id:[{}] {}", utils.getReceivedKey(instanceIndex), messageId,	Util.DTF.print(msgTime));
 		
@@ -76,7 +93,7 @@ public class TestMessageConsumer implements MessageListener {
 		
 		try {
 			if( checkForDups(messageId) ) {
-				log.warn("({}) RCV DUP id:{} {}", utils.getReceivedKey(instanceIndex),	messageId,	Util.DTF.print(msgTime));
+				log.warn("({}) RCV DUP id:[{}] {}", utils.getReceivedKey(instanceIndex),	messageId,	Util.DTF.print(msgTime));
 			}
 			saveToRedis(messageId);
 			

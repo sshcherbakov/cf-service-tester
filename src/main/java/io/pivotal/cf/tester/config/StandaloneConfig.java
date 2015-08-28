@@ -22,6 +22,15 @@ public class StandaloneConfig {
 	@Value("${redis.port:6379}")
 	private int redisPort;
 
+	@Value("${rabbit.connection.timeout:30000}")
+	private int rabbitConnectionTimeout;
+	
+	@Value("${rabbit.channel.checkout.timeout:0}")
+	private int rabbitChannelCheckoutTimeout = 0;
+	
+	@Value("${rabbit.close.timeout:3000}")
+	private int rabbitCloseTimeout;
+	
 	@Bean
 	public JedisConnectionFactory redisConnectionFactory() {
 		JedisConnectionFactory res = new JedisConnectionFactory();
@@ -47,6 +56,9 @@ public class StandaloneConfig {
 		connectionFactory.setUsername(rabbitUsername);
 	    connectionFactory.setPassword(rabbitPassword);
 	    connectionFactory.setPublisherConfirms(publisherConfirms);
+	    connectionFactory.setConnectionTimeout(rabbitConnectionTimeout);
+	    connectionFactory.setChannelCheckoutTimeout(rabbitChannelCheckoutTimeout);
+	    connectionFactory.setCloseTimeout(rabbitCloseTimeout);
 	    return connectionFactory;
 	}
 		

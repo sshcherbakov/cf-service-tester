@@ -1,5 +1,7 @@
 package io.pivotal.cf.tester.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 
 public class TestMessageProducer implements InitializingBean {
+	private static Logger log = LoggerFactory.getLogger(TestMessageProducer.class);
 		
 	@Autowired
 	private TestMessagePublisher publisher;
@@ -30,12 +33,15 @@ public class TestMessageProducer implements InitializingBean {
 				@Override
 				public void run() {
 					while(!Thread.interrupted()) {
-						publisher.publish();
 						try {
+							publisher.publish();
 							Thread.sleep(publishRate);
 						} 
 						catch (InterruptedException e) {
 							break;
+						}
+						catch(RuntimeException rex) {
+							log.error("Could not publish:", rex);
 						}
 					}				
 				}
