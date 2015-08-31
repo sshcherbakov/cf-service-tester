@@ -10,7 +10,7 @@
 	</appender>
 
 	<logger name="io.pivotal.cf.tester.service" level="info" />
-	<logger name="io.pivotal.cf.tester.config.MetricsConfig" level="warn" />
+	<logger name="io.pivotal.cf.tester.config.MetricsConfig" level="info" />
 	<!--<logger name="io.pivotal.cf.tester.service.TestMessageConsumer" level="debug" />-->
 
 	<root level="info">

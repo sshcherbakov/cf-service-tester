@@ -2,6 +2,7 @@ package io.pivotal.cf.tester.config;
 
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.connection.SimpleRoutingConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,12 @@ public class StandaloneConfig {
 	@Value("${rabbit.close.timeout:3000}")
 	private int rabbitCloseTimeout;
 	
+	@Value("${rabbit.network.recovery.interval:5000}")
+	private int rabbitNetworkRecoveryInterval;
+	
+	@Value("${rabbit.heartbeat.interval:580}")
+	private int rabbitHeartbeatInterval;
+	
 	@Bean
 	public JedisConnectionFactory redisConnectionFactory() {
 		JedisConnectionFactory res = new JedisConnectionFactory();
@@ -51,7 +58,11 @@ public class StandaloneConfig {
 		
 	@Bean
 	public ConnectionFactory rabbitConnectionFactory() {
-		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+		com.rabbitmq.client.ConnectionFactory cf = new com.rabbitmq.client.ConnectionFactory();
+		cf.setNetworkRecoveryInterval(rabbitNetworkRecoveryInterval);
+		cf.setRequestedHeartbeat(rabbitHeartbeatInterval);
+		
+		CachingConnectionFactory connectionFactory = new CachingConnectionFactory(cf);
 		connectionFactory.setAddresses(rabbitAddresses);
 		connectionFactory.setUsername(rabbitUsername);
 	    connectionFactory.setPassword(rabbitPassword);
