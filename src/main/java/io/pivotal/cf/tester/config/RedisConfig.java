@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -17,7 +18,7 @@ public class RedisConfig {
 		return new StringRedisSerializer();
 	}
 	
-	@Bean
+	@Lazy @Bean
 	public RedisTemplate<String, Long> redisTemplate(
 			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
 		
@@ -28,7 +29,7 @@ public class RedisConfig {
 		return rt;
 	}
 
-	@Bean
+	@Lazy @Bean
 	public RedisTemplate<String, Map<String,Object>> redisConfigTemplate(
 			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
 		

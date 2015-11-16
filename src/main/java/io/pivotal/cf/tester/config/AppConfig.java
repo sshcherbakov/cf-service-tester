@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -52,7 +51,7 @@ public class AppConfig {
 	
 	@Bean
 	@Qualifier("producer")
-	public TaskExecutor publisherTaskExecutor() {
+	public ThreadPoolTaskExecutor publisherTaskExecutor() {
 		if(publishers <= 0) {
 			return null;
 		}
@@ -62,6 +61,21 @@ public class AppConfig {
 		taskExecutor.setMaxPoolSize(publishers);
 		taskExecutor.setQueueCapacity(0);
 		taskExecutor.setThreadNamePrefix("publisher-");
+		return taskExecutor;
+	}
+	
+	@Bean
+	@Qualifier("consumer")
+	public ThreadPoolTaskExecutor consumerTaskExecutor() {
+		if(rabbitConsumerInstances <= 0) {
+			return null;
+		}
+		
+		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+		taskExecutor.setCorePoolSize(rabbitConsumerInstances);
+		taskExecutor.setMaxPoolSize(rabbitConsumerInstances);
+		taskExecutor.setQueueCapacity(0);
+		taskExecutor.setThreadNamePrefix("consumer-");
 		return taskExecutor;
 	}
 

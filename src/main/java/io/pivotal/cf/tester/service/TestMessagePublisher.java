@@ -16,6 +16,7 @@ import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.codahale.metrics.annotation.Timed;
@@ -91,17 +92,21 @@ public class TestMessagePublisher {
 
 		});
 		
-		for(int i=0; i<numPublishers; i++) {
-			redisTemplate.delete(utils.getPublishedKey(i));
-			redisTemplate.delete(utils.getPublishedZKey(i));
+		try {
+			for(int i=0; i<numPublishers; i++) {
+				redisTemplate.delete(utils.getPublishedKey(i));
+				redisTemplate.delete(utils.getPublishedZKey(i));
+			}
 		}
-		
+		catch(NonTransientDataAccessException ex) {
+			log.error("Redis is not available. Is it down?");
+		}
 	}
 	
 	
 	@Timed
 	public void publish() {
-				
+		
 		final Date now = new Date();
 		String timeString = Util.DTF.print(now.getTime());
 		

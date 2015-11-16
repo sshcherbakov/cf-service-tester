@@ -6,9 +6,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.core.task.TaskExecutor;
 
-public class TestMessageProducer implements InitializingBean {
+public class TestMessageProducer implements InitializingBean, SmartLifecycle {
 	private static Logger log = LoggerFactory.getLogger(TestMessageProducer.class);
 		
 	@Autowired
@@ -24,6 +25,8 @@ public class TestMessageProducer implements InitializingBean {
 	@Value("${rabbit.publishers:1}")
 	private int publishers;
 	
+	private volatile boolean isRunning = true;
+	
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
@@ -32,7 +35,7 @@ public class TestMessageProducer implements InitializingBean {
 			taskExecutor.execute(new Runnable() {
 				@Override
 				public void run() {
-					while(!Thread.interrupted()) {
+					while(isRunning && !Thread.interrupted()) {
 						try {
 							publisher.publish();
 							Thread.sleep(publishRate);
@@ -48,6 +51,39 @@ public class TestMessageProducer implements InitializingBean {
 			});
 			
 		}
+	}
+	
+	@Override
+	public void start() {
+		log.debug("Starting {}", this.getClass().getSimpleName());
+	}
+
+	@Override
+	public void stop() {
+		log.debug("Stopping {}", this.getClass().getSimpleName());
+		this.isRunning = false;
+	}
+
+	@Override
+	public boolean isRunning() {
+		return isRunning;
+	}
+
+	@Override
+	public int getPhase() {
+		return 0;
+	}
+
+	@Override
+	public boolean isAutoStartup() {
+		return true;
+	}
+
+	@Override
+	public void stop(Runnable callback) {
+		log.debug("Stopping {}", this.getClass().getSimpleName());
+		this.isRunning = false;
+		callback.run();
 	}
 	
 }

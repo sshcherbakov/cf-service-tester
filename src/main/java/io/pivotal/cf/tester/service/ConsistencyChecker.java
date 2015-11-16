@@ -43,48 +43,53 @@ public class ConsistencyChecker {
 			return;
 		}
 		
-		for(int i=0; i<numPublishers; i++) {
-
-			Date checkTime = new Date();
-			long checkTimeLong = checkTime.getTime();
-			long checkSince = checkTimeLong - timeSince;
-
-			BoundZSetOperations<String, Long> publishedZSetOps = redisTemplate.boundZSetOps(utils.getPublishedZKey(i));
-			BoundSetOperations<String, Long> publishedSetOps = redisTemplate.boundSetOps(utils.getPublishedKey(i));
-
-			// Get the ids of the messages published longer than timeout to 
-			// wait for their reception
-			Set<Long> oldPublishedIds = publishedZSetOps.rangeByScore(0, checkSince);
-			Set<Long> oldUnrespondedIds = new HashSet<>( oldPublishedIds );
-
-			for(int j=0; j<numConsumers; j++) {
-								
-				log.debug("Checking messages published by {} at {} {} ({}) since ({})", 
-						utils.getPublishedKey(i), utils.getReceivedKey(j), checkTime, checkTimeLong, checkSince);
-		
-				
-				BoundSetOperations<String, Long> receivedSetOps = redisTemplate.boundSetOps(utils.getReceivedKey(j));
-						
-				// Get the Set difference between all published ID minus all responded ids
-				Set<Long> unresponded = publishedSetOps.diff( utils.getReceivedKey(j) );
-				
-				// Filter out recent IDs for which the timeout hasn't fired yet
-				oldUnrespondedIds.retainAll(unresponded);
-				
-				if( !oldUnrespondedIds.isEmpty() ) {
-					log.error("NO RESPONSE in {} FOR {} MESSAGES: {}", 
-							utils.getReceivedKey(j), utils.getPublishedKey(i), oldPublishedIds);
+		try {
+			for(int i=0; i<numPublishers; i++) {
+	
+				Date checkTime = new Date();
+				long checkTimeLong = checkTime.getTime();
+				long checkSince = checkTimeLong - timeSince;
+	
+				BoundZSetOperations<String, Long> publishedZSetOps = redisTemplate.boundZSetOps(utils.getPublishedZKey(i));
+				BoundSetOperations<String, Long> publishedSetOps = redisTemplate.boundSetOps(utils.getPublishedKey(i));
+	
+				// Get the ids of the messages published longer than timeout to 
+				// wait for their reception
+				Set<Long> oldPublishedIds = publishedZSetOps.rangeByScore(0, checkSince);
+				Set<Long> oldUnrespondedIds = new HashSet<>( oldPublishedIds );
+	
+				for(int j=0; j<numConsumers; j++) {
+									
+					log.debug("Checking messages published by {} at {} {} ({}) since ({})", 
+							utils.getPublishedKey(i), utils.getReceivedKey(j), checkTime, checkTimeLong, checkSince);
+			
+					
+					BoundSetOperations<String, Long> receivedSetOps = redisTemplate.boundSetOps(utils.getReceivedKey(j));
+							
+					// Get the Set difference between all published ID minus all responded ids
+					Set<Long> unresponded = publishedSetOps.diff( utils.getReceivedKey(j) );
+					
+					// Filter out recent IDs for which the timeout hasn't fired yet
+					oldUnrespondedIds.retainAll(unresponded);
+					
+					if( !oldUnrespondedIds.isEmpty() ) {
+						log.error("NO RESPONSE in {} FOR {} MESSAGES: {}", 
+								utils.getReceivedKey(j), utils.getPublishedKey(i), oldPublishedIds);
+					}
+					
+					// Clean old checked records
+					receivedSetOps.remove(oldPublishedIds);
+					
 				}
-				
-				// Clean old checked records
-				receivedSetOps.remove(oldPublishedIds);
-				
+	
+				publishedZSetOps.removeRangeByScore(0, checkSince);
+				publishedSetOps.remove(oldPublishedIds);
 			}
-
-			publishedZSetOps.removeRangeByScore(0, checkSince);
-			publishedSetOps.remove(oldPublishedIds);
 		}
+		catch(Exception ex) {
+			log.warn("Consistency could not be checked: {}", ex.getMessage());
+		}
+		
 	}
-
 	
 }

@@ -14,11 +14,13 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.pivotal.cf.tester.service.TestMessageConsumer;
 import io.pivotal.cf.tester.util.Util;
 
+@Profile("!test")
 @Component
 public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
@@ -87,6 +89,7 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
     					.addPropertyReference("connectionFactory", "rabbitConnectionFactory")
     					.addPropertyValue("queueNames", indexedQueueName)
     					.addPropertyReference("messageListener", "testMessageListenerAdapter" + i)
+    					.addPropertyReference("taskExecutor", "consumerTaskExecutor")
     					.addPropertyReference("errorHandler", "testErrorHandler")
     					.addPropertyValue("concurrentConsumers", rabbitConcurrentConsumers)
     					.addPropertyValue("autoDeclare", rabbitAutoDeclare)

@@ -4,13 +4,16 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 
 public class StateService implements InitializingBean {
-	
+	private static Logger log = LoggerFactory.getLogger(StateService.class);
+
 	private volatile boolean isRabbitUp = false;
 	private volatile boolean isRedisUp = false;
 	private AtomicLong nextId = new AtomicLong();
@@ -73,8 +76,13 @@ public class StateService implements InitializingBean {
 	
 	
 	private void resetCheckpoints() {
-		if( redisTemplate != null ) {
-			redisTemplate.boundValueOps(applicationName).getOperations().delete(applicationName);
+		try {
+			if( redisTemplate != null ) {
+				redisTemplate.boundValueOps(applicationName).getOperations().delete(applicationName);
+			}
+		}
+		catch(Exception ex) {
+			log.error("Redis cannot be located. Is it down?");
 		}
 	}
 
