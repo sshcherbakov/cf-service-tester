@@ -87,7 +87,7 @@ public class TestMessageConsumer implements MessageListener {
 		
 		log.info("({}) RCV from:[{}] id:[{}] {}", 
 				utils.getReceivedKey(instanceIndex), 
-				messageId, appId,
+				appId, messageId, 
 				Util.DTF.print(msgTime));
 		
 		if(redisTemplate == null) {
