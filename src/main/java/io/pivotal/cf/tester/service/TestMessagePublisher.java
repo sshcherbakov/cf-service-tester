@@ -1,8 +1,6 @@
 package io.pivotal.cf.tester.service;
 
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 
@@ -15,12 +13,12 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.NonTransientDataAccessException;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 import com.codahale.metrics.annotation.Timed;
 
+import io.pivotal.cf.tester.config.AppConfig;
 import io.pivotal.cf.tester.util.Util;
 import io.pivotal.cf.tester.util.UtilBean;
 
@@ -36,9 +34,13 @@ import io.pivotal.cf.tester.util.UtilBean;
  * @author sshcherbakov
  *
  */
+@Profile(AppConfig.PROFILE_PRODUCER)
+@Component
 public class TestMessagePublisher {
 	private static Logger log = LoggerFactory.getLogger(TestMessagePublisher.class);
 	
+	@Value("${vcap.application.instance_id:default}")
+	private String instanceName;
 
 	@Autowired
 	private UtilBean utils;
@@ -55,19 +57,12 @@ public class TestMessagePublisher {
 	@Autowired(required=false)
 	private RabbitTemplate rabbitTemplate;
 
-	@Autowired(required=false)
-	private RedisTemplate< String, Long > redisTemplate;
+	@Autowired
+	private ConsistencyChecker consistencyChecker;
 
 	@Autowired
 	private StateService stateService;
 
-	private AtomicInteger instanceIdCounter = new AtomicInteger(0);
-	private ThreadLocal<Integer> instanceIndex = ThreadLocal.withInitial(new Supplier<Integer>() {
-		@Override
-		public Integer get() {
-			return instanceIdCounter.getAndIncrement();
-		}
-	});
 		
 	@PostConstruct
 	void init() {
@@ -75,32 +70,15 @@ public class TestMessagePublisher {
 		rabbitTemplate.setConfirmCallback( (correlationData, ack, cause) -> {
 				log.debug("id={} ack={} cause={}", correlationData.getId(), ack, cause);
 				long msgId = -1;
-				try {
-					if( ack ) {
-						msgId = Long.parseLong(correlationData.getId());
-						saveToRedis( msgId );
-					}
-					else {
-						log.warn("Message [{}] has NOT been confirmed");
-					}
-				
+				if( ack ) {
+					msgId = Long.parseLong(correlationData.getId());
+					consistencyChecker.saveToRedis( msgId );
 				}
-				catch(DataAccessException ex) {
-					log.warn("Saving of [{}] to Redis has failed", msgId);
-					stateService.setRedisDown();
+				else {
+					log.warn("Message [{}] has NOT been confirmed");
 				}
-
 		});
 		
-		try {
-			for(int i=0; i<numPublishers; i++) {
-				redisTemplate.delete(utils.getPublishedKey(i));
-				redisTemplate.delete(utils.getPublishedZKey(i));
-			}
-		}
-		catch(NonTransientDataAccessException ex) {
-			log.error("Redis is not available. Is it down?");
-		}
 	}
 	
 	
@@ -111,7 +89,7 @@ public class TestMessagePublisher {
 		String timeString = Util.DTF.print(now.getTime());
 		
 		String messageBody = new StringBuilder()
-			.append(" (").append(utils.getPublishedKey(instanceIndex.get())).append(")")
+			.append(" (").append(utils.getPublishedKey(consistencyChecker.getIndex())).append(")")
 			.append(" PUB ")
 			.append(timeString)
 			.toString();
@@ -119,10 +97,10 @@ public class TestMessagePublisher {
 		long nextId = stateService.getNextId();
 		Message message = MessageBuilder
 				.withBody(messageBody.getBytes())
+				.setAppId(instanceName)
 				.setMessageId( Long.toString(nextId) )
 				.setTimestamp(now)
 				.build();
-			
 			
 		sendToRabbit(messageBody, message);
 					
@@ -142,41 +120,17 @@ public class TestMessagePublisher {
 			rabbitTemplate.send(rabbitExchangeName, rabbitQueueName, 
 					message, new CorrelationData(messageId));
 			
-			log.debug("Published {}", messageBody);
+			log.info("{} {}", instanceName, messageBody);
 			stateService.setRabbitUp();
 			
 		}
 		catch(AmqpException ex) {
 			log.warn("({}) Publish of [{}] to RabbitMQ has failed",
-					utils.getPublishedKey(instanceIndex.get()), messageId);
+					utils.getPublishedKey(consistencyChecker.getIndex()), messageId);
 			
 			stateService.setRabbitDown();
 		}
 		
 	}
 	
-	/**
-	 * Save the message id and the timestamp when it has been 
-	 * published as a score to the Redis ZSET 
-	 * 
-	 * @param messageId
-	 */
-	private void saveToRedis(long messageId) {
-		if(redisTemplate == null) {
-			log.debug("Redis Service unavailable");
-			stateService.setRedisDown();
-			return;
-		}
-			
-		long time = new Date().getTime();
-		redisTemplate.boundZSetOps( utils.getPublishedZKey(instanceIndex.get()) )
-			.add(messageId, time);
-		
-		redisTemplate.boundSetOps( utils.getPublishedKey(instanceIndex.get()) )
-			.add(messageId);
-	
-		stateService.setRedisUp();
-			
-	}
-
 }

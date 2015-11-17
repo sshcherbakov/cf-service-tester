@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import io.pivotal.cf.tester.service.TestMessageConsumer;
 import io.pivotal.cf.tester.util.Util;
 
-@Profile("!test")
+@Profile(AppConfig.PROFILE_CONSUMER)
 @Component
 public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 

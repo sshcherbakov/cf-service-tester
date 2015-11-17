@@ -10,11 +10,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import io.pivotal.cf.tester.MainApplication;
+import io.pivotal.cf.tester.config.AppConfig;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MainApplication.class)
 @WebAppConfiguration
-@ActiveProfiles("test")
+@ActiveProfiles(AppConfig.PROFILE_PRODUCER)
 public class ApplicationTests {
 	private static Logger log = LoggerFactory.getLogger(ApplicationTests.class);
 	

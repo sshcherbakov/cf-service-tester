@@ -2,51 +2,35 @@ package io.pivotal.cf.tester.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import io.pivotal.cf.tester.service.ConsistencyChecker;
-import io.pivotal.cf.tester.service.StateService;
-import io.pivotal.cf.tester.service.TestErrorHandler;
-import io.pivotal.cf.tester.service.TestMessageProducer;
-import io.pivotal.cf.tester.service.TestMessagePublisher;
 import io.pivotal.cf.tester.util.UtilBean;
 
+@EnableHystrix
 @EnableScheduling
 @Configuration
 public class AppConfig {
+	
+	public final static String PROFILE_PRODUCER = "producer";
+	public final static String PROFILE_CONSUMER = "consumer";
+	public final static String PROFILE_HEADLESS = "headless";
 	
 	@Value("${rabbit.publishers:1}")
 	private int publishers;
 	
 	@Value("${rabbit.consumer.instances:1}")
-	int rabbitConsumerInstances;
+	private int rabbitConsumerInstances;
+	
+	@Value("${rabbit.concurrent.consumers:1}")
+	private int rabbitConcurrentConsumers;
 	
 	@Bean
 	public UtilBean utilBean() {
 		return new UtilBean();
-	}
-
-	@Bean
-	public TestErrorHandler testErrorHandler() {
-		return new TestErrorHandler();
-	}
-	
-	@Bean
-	public TestMessagePublisher testMessagePublisher() {
-		return new TestMessagePublisher();
-	}
-
-	@Bean
-	public TestMessageProducer testMessageProducer() {
-		return new TestMessageProducer();
-	}
-	
-	@Bean
-	public ConsistencyChecker consistencyChecker() {
-		return new ConsistencyChecker();
 	}
 	
 	@Bean
@@ -72,16 +56,10 @@ public class AppConfig {
 		}
 		
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(rabbitConsumerInstances);
-		taskExecutor.setMaxPoolSize(rabbitConsumerInstances);
-		taskExecutor.setQueueCapacity(0);
+		taskExecutor.setCorePoolSize(rabbitConsumerInstances * rabbitConcurrentConsumers);
+		taskExecutor.setMaxPoolSize(rabbitConsumerInstances * rabbitConcurrentConsumers);
 		taskExecutor.setThreadNamePrefix("consumer-");
 		return taskExecutor;
-	}
-
-	@Bean
-	public StateService stateService() {
-		return new StateService();
 	}
 	
 }

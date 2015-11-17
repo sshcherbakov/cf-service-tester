@@ -28,13 +28,7 @@ public class RabbitConfig {
 	
 	@Value("${rabbit.autodelete:false}")
 	private boolean isRabbitAutoDelete = false;
-	
-	@Value("${rabbit.autodeclare:true}")
-	private boolean isRabbitAutoDeclare = true;
-	
-	@Value("${rabbit.concurrent.consumers:1}")
-	private int rabbitConcurrentConsumers = 1;
-	
+		
 	@Autowired
 	public ErrorHandler testErrorHandler;
 	

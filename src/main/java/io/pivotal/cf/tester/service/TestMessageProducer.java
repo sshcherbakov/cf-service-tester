@@ -7,8 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.stereotype.Component;
 
+import io.pivotal.cf.tester.config.AppConfig;
+
+@Profile(AppConfig.PROFILE_PRODUCER)
+@Component
 public class TestMessageProducer implements InitializingBean, SmartLifecycle {
 	private static Logger log = LoggerFactory.getLogger(TestMessageProducer.class);
 		

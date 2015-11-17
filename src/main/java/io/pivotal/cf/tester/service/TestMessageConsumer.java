@@ -64,9 +64,11 @@ public class TestMessageConsumer implements MessageListener {
 	@Timed
 	@Override
 	public void onMessage(Message message) {
+		String appId = "";
 		long messageId = -1;
 		long msgTime = -1;
 		try {
+			appId = message.getMessageProperties().getAppId();
 			String messageIdStr = message.getMessageProperties().getMessageId();
 			messageId = Long.parseLong( messageIdStr );
 			Date timestamp = message.getMessageProperties().getTimestamp();
@@ -83,7 +85,10 @@ public class TestMessageConsumer implements MessageListener {
 			return;
 		}
 		
-		log.debug("({}) RCV id:[{}] {}", utils.getReceivedKey(instanceIndex), messageId,	Util.DTF.print(msgTime));
+		log.info("({}) RCV from:[{}] id:[{}] {}", 
+				utils.getReceivedKey(instanceIndex), 
+				messageId, appId,
+				Util.DTF.print(msgTime));
 		
 		if(redisTemplate == null) {
 			log.debug("Redis Service unavailable");

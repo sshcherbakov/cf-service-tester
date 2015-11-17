@@ -5,15 +5,18 @@
     
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+			<!--<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level - %msg%n</pattern>
 		</encoder>
 	</appender>
-
+<!--
 	<logger name="io.pivotal.cf.tester.service" level="info" />
 	<logger name="io.pivotal.cf.tester.config.MetricsConfig" level="info" />
-	<!--<logger name="io.pivotal.cf.tester.service.TestMessageConsumer" level="debug" />-->
+-->
+	<logger name="io.pivotal.cf.tester.service.TestMessagePublisher" level="info" />
+	<logger name="io.pivotal.cf.tester.service.TestMessageConsumer" level="info" />
 
-	<root level="info">
+	<root level="off">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>
