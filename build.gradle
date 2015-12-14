@@ -41,6 +41,8 @@ dependencies {
 	compile("org.springframework.boot:spring-boot-starter-thymeleaf")
 	compile("org.springframework.cloud:spring-cloud-starter-hystrix")
 	
+	compile('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2')
+	
 	compile("joda-time:joda-time:2.8.1")
 	compile("io.dropwizard.metrics:metrics-core:3.1.2")
 	compile("com.ryantenney.metrics:metrics-spring:3.1.0")

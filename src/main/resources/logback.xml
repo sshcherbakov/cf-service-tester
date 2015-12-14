@@ -13,8 +13,10 @@
 	<logger name="io.pivotal.cf.tester.service" level="info" />
 	<logger name="io.pivotal.cf.tester.config.MetricsConfig" level="info" />
 -->
-	<logger name="io.pivotal.cf.tester.service.TestMessagePublisher" level="info" />
+	<logger name="io.pivotal.cf.tester.service.AmqpTestMessagePublisher" level="info" />
+	<logger name="io.pivotal.cf.tester.service.MqttTestMessagePublisher" level="info" />
 	<logger name="io.pivotal.cf.tester.service.TestMessageConsumer" level="info" />
+	<logger name="io.pivotal.cf.tester" level="error" />
 
 	<root level="off">
 		<appender-ref ref="STDOUT" />

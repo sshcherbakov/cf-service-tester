@@ -37,6 +37,9 @@ public class StandaloneConfig {
 	@Value("${rabbit.heartbeat.interval:580}")
 	private int rabbitHeartbeatInterval;
 	
+	@Value("${spring.rabbitmq.virtualHost:/}")
+	private String rabbitVirtualHost;
+	
 	@Bean
 	public JedisConnectionFactory redisConnectionFactory() {
 		JedisConnectionFactory res = new JedisConnectionFactory();
@@ -62,6 +65,7 @@ public class StandaloneConfig {
 		cf.setRequestedHeartbeat(rabbitHeartbeatInterval);
 		
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory(cf);
+		connectionFactory.setVirtualHost(rabbitVirtualHost);
 		connectionFactory.setAddresses(rabbitAddresses);
 		connectionFactory.setUsername(rabbitUsername);
 	    connectionFactory.setPassword(rabbitPassword);

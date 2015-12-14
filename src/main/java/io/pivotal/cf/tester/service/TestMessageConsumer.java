@@ -60,35 +60,49 @@ public class TestMessageConsumer implements MessageListener {
 			}
 		}
 	}
+	
+	private String getAppId(Message message) {
+		return message.getMessageProperties().getAppId();
+	}
+	
+	private Long getMessageId(Message message) {
+		try {
+			String messageIdStr = message.getMessageProperties().getMessageId();
+			return Long.parseLong( messageIdStr );
+		}
+		catch(NumberFormatException nfe) {
+			log.debug("Unexpected message {}", message);
+			return null;
+		}
+	}
+	
+	private String getMessageTime(Message message) {
+		try {
+			Date timestamp = message.getMessageProperties().getTimestamp();
+			if(timestamp != null) {
+				return Util.DTF.print(timestamp.getTime());
+			}
+		}
+		catch(NumberFormatException nfe) {
+			log.debug("Unexpected message {}", message);
+		}
+		
+		log.debug("Unexpected message {}", message);
+		return null;
+	}
 
 	@Timed
 	@Override
 	public void onMessage(Message message) {
-		String appId = "";
-		long messageId = -1;
-		long msgTime = -1;
-		try {
-			appId = message.getMessageProperties().getAppId();
-			String messageIdStr = message.getMessageProperties().getMessageId();
-			messageId = Long.parseLong( messageIdStr );
-			Date timestamp = message.getMessageProperties().getTimestamp();
-			if(timestamp != null) {
-				msgTime = timestamp.getTime();
-			}
-			else {
-				log.error("Unexpected message {}", message);
-				return;
-			}
-		}
-		catch(NumberFormatException nfe) {
-			log.error("Unexpected message {}", message);
-			return;
-		}
 		
-		log.info("({}) RCV from:[{}] id:[{}] {}", 
+		String appId = getAppId(message);
+		Long messageId = getMessageId(message);
+		String msgTime = getMessageTime(message);
+		
+		log.info("({}) RCV from:[{}] id:[{}] at {} -> {}", 
 				utils.getReceivedKey(instanceIndex), 
 				appId, messageId, 
-				Util.DTF.print(msgTime));
+				msgTime, new String(message.getBody()));
 		
 		if(redisTemplate == null) {
 			log.debug("Redis Service unavailable");
@@ -98,7 +112,7 @@ public class TestMessageConsumer implements MessageListener {
 		
 		try {
 			if( checkForDups(messageId) ) {
-				log.warn("({}) RCV DUP id:[{}] {}", utils.getReceivedKey(instanceIndex),	messageId,	Util.DTF.print(msgTime));
+				log.warn("({}) RCV DUP id:[{}] {}", utils.getReceivedKey(instanceIndex),	messageId,	msgTime);
 			}
 			saveToRedis(messageId);
 			

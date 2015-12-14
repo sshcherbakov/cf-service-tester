@@ -18,6 +18,7 @@ public class AppConfig {
 	public final static String PROFILE_PRODUCER = "producer";
 	public final static String PROFILE_CONSUMER = "consumer";
 	public final static String PROFILE_HEADLESS = "headless";
+	public final static String PROFILE_MQTT = "mqtt";
 	
 	@Value("${rabbit.publishers:1}")
 	private int publishers;
