@@ -80,7 +80,6 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
     				.addConstructorArgValue(indexedQueueName)
     				.addConstructorArgValue(DestinationType.QUEUE)
     				.addConstructorArgValue(rabbitExchangeName)
-    				//.addConstructorArgValue(indexedQueueName)
     				.addConstructorArgValue(rabbitQueueName)
     				.addConstructorArgValue(Collections.emptyMap())
     				.getBeanDefinition());

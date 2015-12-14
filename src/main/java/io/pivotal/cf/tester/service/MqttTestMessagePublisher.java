@@ -45,8 +45,8 @@ public class MqttTestMessagePublisher extends AbstractTestMessagePublisher {
 		}
 
 		Date now = new Date();
-		String messagePayload = getMessageBody(now);
 		String messageId = getMessageId();
+		String messagePayload = getMessageBody(messageId, now);
 		
 		try {
 
@@ -54,7 +54,9 @@ public class MqttTestMessagePublisher extends AbstractTestMessagePublisher {
 			MqttMessage mqttMessage = new MqttMessage(messagePayload.getBytes());
 			mqttMessage.setQos(mqttQos);
 			MqttDeliveryToken token = topic.publish(mqttMessage);
-			token.waitForCompletion();
+			if(mqttQos > 0) {
+				token.waitForCompletion();
+			}
 			
 			log.info("{} [{}] {}", instanceName, 
 					messageId, messagePayload);

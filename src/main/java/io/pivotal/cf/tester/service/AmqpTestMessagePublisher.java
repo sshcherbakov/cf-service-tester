@@ -70,8 +70,8 @@ public class AmqpTestMessagePublisher extends AbstractTestMessagePublisher {
 		}
 		
 		Date now = new Date();
-		String messagePayload = getMessageBody(now);
 		String messageId = getMessageId();
+		String messagePayload = getMessageBody(messageId, now);
 		
 		MessageProperties messageProperties = new MessageProperties();
 		messageProperties.setAppId(instanceName);

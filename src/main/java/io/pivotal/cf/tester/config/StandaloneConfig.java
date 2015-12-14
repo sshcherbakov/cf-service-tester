@@ -16,7 +16,7 @@ public class StandaloneConfig {
 	@Value("${redis.hostname:localhost}")
 	private String redisHostname;
 	
-	@Value("${redis.publisher.confirms:true}")
+	@Value("${rabbit.publisher.confirms:true}")
 	private boolean publisherConfirms = true;	
 
 	@Value("${redis.port:6379}")

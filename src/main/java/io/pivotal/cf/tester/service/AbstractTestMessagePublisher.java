@@ -33,12 +33,16 @@ public abstract class AbstractTestMessagePublisher implements TestMessagePublish
 	protected StateService stateService;
 	
 		
-	protected String getMessageBody(final Date now) {
+	protected String getMessageBody(final String messageId, final Date now) {
 		String timeString = Util.DTF.print(now.getTime());
 		
 		String messageBody = new StringBuilder()
 			.append(" (").append(utils.getPublishedKey(consistencyChecker.getIndex())).append(")")
 			.append(" PUB ")
+			.append(instanceName)
+			.append(" [")
+			.append(messageId)
+			.append("] ")
 			.append(timeString)
 			.toString();
 		return messageBody;
