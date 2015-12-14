@@ -4,6 +4,8 @@ import java.util.Properties;
 
 import org.joda.time.format.DateTimeFormatter;
 
+import io.pivotal.cf.tester.service.TestMessageConsumer;
+
 public final class Util {
 	
 	private Util() {}
@@ -30,6 +32,16 @@ public final class Util {
 	public static boolean getAppPropertyBool(Properties props, String propName, String defaultValue) {
 		String propVal = getAppProperty(props, propName, defaultValue);
 		return Boolean.parseBoolean(propVal);
+	}
+
+	public static void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} 
+		catch (InterruptedException e) {
+			TestMessageConsumer.log.warn("Interrupted", e);
+			throw new RuntimeException(e);
+		}
 	}
 	
 }

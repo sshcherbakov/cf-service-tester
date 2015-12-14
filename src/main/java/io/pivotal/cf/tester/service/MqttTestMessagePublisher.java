@@ -38,7 +38,7 @@ public class MqttTestMessagePublisher extends AbstractTestMessagePublisher {
 	
 	@Override
 	public void publish() {
-		if(mqttClient == null) {
+		if(mqttClient == null || !mqttClient.isConnected()) {
 			log.debug("MQTT client unavailable");
 			stateService.setRabbitDown();
 			return;
