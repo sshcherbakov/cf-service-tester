@@ -63,7 +63,16 @@ public class StateService implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		isRedisUp = redisTemplate != null;
+		if( redisTemplate == null ) {
+			isRedisUp = false;
+			return;
+		}
+		try {
+			isRedisUp = redisTemplate.getConnectionFactory().getConnection() != null;
+		}
+		catch(Exception ex) {
+			isRedisUp = false;
+		}
 	}
 
 	public long getNextId() {

@@ -1,6 +1,7 @@
 package io.pivotal.cf.tester.config;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,10 +21,15 @@ public class RedisConfig {
 	
 	@Lazy @Bean
 	public RedisTemplate<String, Long> redisTemplate(
-			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
+			Optional<RedisConnectionFactory> connectionFactory, 
+			RedisSerializer<String> keySerializer) {
+		
+		if( !connectionFactory.isPresent() ) {
+			return null;
+		}
 		
 		RedisTemplate<String, Long> rt = new RedisTemplate<>();
-		rt.setConnectionFactory(connectionFactory);
+		rt.setConnectionFactory(connectionFactory.get());
 		rt.setKeySerializer(keySerializer);
 		rt.setHashKeySerializer(keySerializer);
 		return rt;
@@ -31,10 +37,15 @@ public class RedisConfig {
 
 	@Lazy @Bean
 	public RedisTemplate<String, Map<String,Object>> redisConfigTemplate(
-			RedisConnectionFactory connectionFactory, RedisSerializer<String> keySerializer) {
-		
+			Optional<RedisConnectionFactory> connectionFactory, 
+			RedisSerializer<String> keySerializer) {
+
+		if( !connectionFactory.isPresent() ) {
+			return null;
+		}
+
 		RedisTemplate<String, Map<String,Object>> rt = new RedisTemplate<>();
-		rt.setConnectionFactory(connectionFactory);
+		rt.setConnectionFactory(connectionFactory.get());
 		rt.setKeySerializer(keySerializer);
 		rt.setHashKeySerializer(keySerializer);
 		return rt;

@@ -61,11 +61,16 @@ public class DuplicatesChecker {
 	 * @param messageId
 	 * @return true if the set already contains the messageId and thus the duplicate is detected
 	 */
-	public boolean checkForDups( final int consumerIndex, final long messageId ) {
+	public boolean checkForDups( final int consumerIndex, final Long messageId ) {
 		if(redisTemplate == null) {
 			log.debug("Redis Service unavailable");
 			stateService.setRedisDown();
-			return false;		// <-- amnesia if Redis is not available
+			return false;			// <-- amnesia if Redis is not available
+		}
+		
+		if(messageId == null) {		// Probably an MQTT message
+			log.debug("No messageId found");
+			return false;
 		}
 		
 		boolean res = false;

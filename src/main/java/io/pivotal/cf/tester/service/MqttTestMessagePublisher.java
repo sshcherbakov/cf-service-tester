@@ -65,7 +65,7 @@ public class MqttTestMessagePublisher extends AbstractTestMessagePublisher {
 			
 		}
 		catch(MqttException ex) {
-			log.warn("({}) Publish of MQTT messate [{}] to RabbitMQ has failed",
+			log.warn("({}) Publish of MQTT message [{}] to RabbitMQ has failed",
 					utils.getPublishedKey(consistencyChecker.getIndex()), messageId);
 			
 			stateService.setRabbitDown();

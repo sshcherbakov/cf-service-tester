@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 @Configuration
 @Profile("cloud")
@@ -23,7 +24,13 @@ public class CloudConfig extends AbstractCloudConfig {
 
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
-		return connectionFactory().redisConnectionFactory();
+		try {
+			return connectionFactory().redisConnectionFactory();
+		}
+		catch(Exception ex) {
+			log.warn("Cannot create redisConnectionFactory. Is Redis service binding missing?", ex);
+			return new JedisConnectionFactory();
+		}
 	}
 
 	@Bean
