@@ -74,7 +74,10 @@ public class MqttConfig implements SmartLifecycle {
 	@Override
 	public void stop() {
 		try {
-			mqttClient().disconnect();
+			MqttClient mqttClient = mqttClient();
+			if(mqttClient.isConnected()) {
+				mqttClient.disconnect();
+			}
 			isRunning = false;
 		} 
 		catch (MqttException e) {

@@ -68,6 +68,10 @@ public class MqttTestMessagePublisher extends AbstractTestMessagePublisher {
 			log.warn("({}) Publish of MQTT message [{}] to RabbitMQ has failed",
 					utils.getPublishedKey(consistencyChecker.getIndex()), messageId);
 			
+			if( ex.getReasonCode() == 32109 ) {
+				log.warn("Connection lost (unsupported QoS mode?)");
+			}
+			
 			stateService.setRabbitDown();
 		}
 		
