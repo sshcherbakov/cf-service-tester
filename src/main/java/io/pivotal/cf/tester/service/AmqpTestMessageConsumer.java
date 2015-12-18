@@ -14,8 +14,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.pivotal.cf.tester.util.Util;
 import io.pivotal.cf.tester.util.UtilBean;
 
-public class TestMessageConsumer implements MessageListener {
-	public static Logger log = LoggerFactory.getLogger(TestMessageConsumer.class);
+public class AmqpTestMessageConsumer implements MessageListener {
+	public static Logger log = LoggerFactory.getLogger(AmqpTestMessageConsumer.class);
 
 	@Autowired
 	private DuplicatesChecker dupChecker;
@@ -35,7 +35,7 @@ public class TestMessageConsumer implements MessageListener {
 	private final int instanceIndex;
 
 	
-	public TestMessageConsumer(int id) {
+	public AmqpTestMessageConsumer(int id) {
 		this.instanceIndex = id;
 	}
 	

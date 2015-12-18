@@ -15,7 +15,8 @@
 -->
 	<logger name="io.pivotal.cf.tester.service.AmqpTestMessagePublisher" level="info" />
 	<logger name="io.pivotal.cf.tester.service.MqttTestMessagePublisher" level="info" />
-	<logger name="io.pivotal.cf.tester.service.TestMessageConsumer" level="info" />
+	<logger name="io.pivotal.cf.tester.service.AmqpTestMessageConsumer" level="info" />
+	<logger name="io.pivotal.cf.tester.service.MqttTestMessageConsumer" level="info" />
 	<logger name="io.pivotal.cf.tester" level="error" />
 
 	<root level="off">

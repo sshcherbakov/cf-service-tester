@@ -4,7 +4,7 @@ import java.util.Properties;
 
 import org.joda.time.format.DateTimeFormatter;
 
-import io.pivotal.cf.tester.service.TestMessageConsumer;
+import io.pivotal.cf.tester.service.AmqpTestMessageConsumer;
 
 public final class Util {
 	
@@ -39,7 +39,7 @@ public final class Util {
 			Thread.sleep(millis);
 		} 
 		catch (InterruptedException e) {
-			TestMessageConsumer.log.warn("Interrupted", e);
+			AmqpTestMessageConsumer.log.warn("Interrupted", e);
 			throw new RuntimeException(e);
 		}
 	}

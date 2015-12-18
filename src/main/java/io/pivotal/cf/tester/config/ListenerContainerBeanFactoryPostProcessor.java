@@ -14,15 +14,17 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import io.pivotal.cf.tester.service.TestMessageConsumer;
+import io.pivotal.cf.tester.service.AmqpTestMessageConsumer;
 import io.pivotal.cf.tester.util.Util;
 
 @Profile(AppConfig.PROFILE_CONSUMER)
 @Component
-public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPostProcessor, EnvironmentAware {
 
 	private final String	applicationInstanceId;
 	private final int 		rabbitConsumerInstances;
@@ -33,6 +35,7 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
 	private final boolean 	rabbitAutoDelete;
 	private final String 	rabbitExchangeName;
 	private final String 	rabbitQueueName;
+	private Environment 	environment;
 	
 	public ListenerContainerBeanFactoryPostProcessor() throws FileNotFoundException, IOException {
 		Properties props = new Properties();
@@ -51,6 +54,9 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
     
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+    	if( environment.acceptsProfiles(AppConfig.PROFILE_MQTT) ) {
+    		return;
+    	}
     	
     	BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
     	for(int i=0; i < rabbitConsumerInstances; i++) {
@@ -58,7 +64,7 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
     		String indexedQueueName = rabbitQueueName + "." + applicationInstanceId + "." + i;
     		
 			registry.registerBeanDefinition("testMessageHandler" + i, 
-    				BeanDefinitionBuilder.genericBeanDefinition(TestMessageConsumer.class)
+    				BeanDefinitionBuilder.genericBeanDefinition(AmqpTestMessageConsumer.class)
     					.addConstructorArgValue(i)
     					.getBeanDefinition());
     		
@@ -96,5 +102,10 @@ public class ListenerContainerBeanFactoryPostProcessor implements BeanFactoryPos
     					.getBeanDefinition());
     	}
     }
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
 
 }
