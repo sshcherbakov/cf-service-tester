@@ -20,6 +20,8 @@ public class StartController {
     public String start(Model model) {
         model.addAttribute("statusRabbit", stateService.isRabbitUp());
         model.addAttribute("statusRedis", stateService.isRedisUp());
+        model.addAttribute("statusDatabase", stateService.isDatabaseUp());
+
         return "start";
     }
 	

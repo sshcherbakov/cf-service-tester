@@ -45,11 +45,13 @@ Running in Cloud Foundry
 ------------------------
 After logging in to your Cloud Foundry account in the command line console using the [cf-cli](https://github.com/cloudfoundry/cli)
 ````
-cf create service cloudamqp lemur myrabbit
-cf create service rediscloud 20mb myredis
+cf create-service p-rabbitmq standard myrabbit
+cf create-service p-redis shared-vm myredis
+cf create-service p-mysql 512mb testmysql
 cf push cst -p build/libs/cf-service-tester-0.0.1-RELEASE.jar --no-start
 cf bind-service cst myrabbit
 cf bind-service cst myredis
+cf bind-service cst testmysql
 cf start cst
 ````
 will start the application in the cloud and bind it automatically to the Redis and RabbitMQ instances
