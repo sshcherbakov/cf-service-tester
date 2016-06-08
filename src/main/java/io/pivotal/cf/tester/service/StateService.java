@@ -57,7 +57,7 @@ public class StateService implements InitializingBean {
 	}
 
 	public boolean isDatabaseUp() {
-		return jdbcChecker.checkDatabaseAvailability();
+		return isDatabaseUp;
 	}
 
 	public void setRedisUp() {
