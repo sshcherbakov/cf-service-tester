@@ -18,6 +18,7 @@ public class StateService implements InitializingBean {
 
 	private volatile boolean isRabbitUp = false;
 	private volatile boolean isRedisUp = false;
+	private volatile boolean isDatabaseUp = false;
 	private AtomicLong nextId = new AtomicLong();
 	
 	@Value("${vcap.application.name:cf-tester}")
@@ -29,7 +30,9 @@ public class StateService implements InitializingBean {
 	@Autowired(required=false)
 	RedisTemplate<String, String> redisTemplate;
 
-
+	@Autowired
+	JdbcChecker jdbcChecker;
+	
 	@PostConstruct
 	public void init() {
 		resetCheckpoints();
@@ -53,12 +56,24 @@ public class StateService implements InitializingBean {
 		return isRedisUp;
 	}
 
+	public boolean isDatabaseUp() {
+		return isDatabaseUp;
+	}
+
 	public void setRedisUp() {
 		this.isRedisUp = true;
 	}
 		
 	public void setRedisDown() {
 		this.isRedisUp = false;
+	}
+	
+	public void setDatabaseUp(){
+		this.isDatabaseUp = true;
+	}
+
+	public void setDatabaseDown(){
+		this.isDatabaseUp = false;
 	}
 
 	@Override

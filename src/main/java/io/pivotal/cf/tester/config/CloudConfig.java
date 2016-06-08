@@ -2,6 +2,8 @@ package io.pivotal.cf.tester.config;
 
 import java.util.Properties;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
@@ -21,7 +23,7 @@ public class CloudConfig extends AbstractCloudConfig {
 
 	@Value("${application.name:testQueue}")
 	private String rabbitQueueName;
-
+		
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
 		try {
@@ -43,7 +45,19 @@ public class CloudConfig extends AbstractCloudConfig {
 			return null;
 		}
 	}
-	
+
+
+	@Bean
+	public DataSource dataSource() {
+		try {
+			return connectionFactory().dataSource();
+		}
+		catch(Exception ex) {
+			log.warn("Cannot create Data Source. Is MySQL service binding missing?", ex);
+			return null;
+		}
+	}
+
 	@Bean
     public Properties cloudProperties() {
         return properties();
